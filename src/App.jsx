@@ -15,14 +15,16 @@ function App() {
   const [tempProduct, setTempProduct] = useState(null);
   const [loginStatus, setLoginStatus] = useState(null);
   const [whichButton, setWhichButton] = useState(null);
+  const [newOrEditButton, setNewOrEditButton] = useState(null);
   const [user, setUser] = useState({
     username: "",
     password: "",
   });
-  
-  console.log('我被觸發了');
-  
-  useEffect(() => loginCheck, []); // 只在初次渲染時執行
+
+  // 只在初次渲染時執行
+  useEffect(() => {
+    loginCheck();
+  }, []);
 
   //寫入input
   function inputHandler(e) {
@@ -46,7 +48,7 @@ function App() {
     try {
       const res = await axios.post(`${baseUrl}${signInUrl}`, user);
       const token = res.data.token;
-      document.cookie = `hexschool=${token}`;
+      document.cookie = `hexschool=${token}; path=/;`;
       setLoginMessage(res.data.message);
       setLoginStatus(true);
       getProductsHandler();
@@ -67,7 +69,7 @@ function App() {
         headers: { Authorization: myCookie },
       };
       const res = await axios.post(`${baseUrl}${loginCheckUrl}`, {}, config);
-      setLoginMessage(res.data.success? '已登入':'未登入');
+      setLoginMessage(res.data.success ? "已登入" : "未登入");
       setLoginStatus(true);
       getProductsHandler();
     } catch (error) {
@@ -80,6 +82,10 @@ function App() {
   async function getProductsHandler() {
     const res = await axios.get(`${baseUrl}${getProductsUrl}`);
     setGetProducts(res.data.products);
+  }
+
+  async function newProductHandler(str) {
+    str === true ? setNewOrEditButton(true) : setNewOrEditButton(false);
   }
 
   return (
@@ -122,7 +128,7 @@ function App() {
           type="button"
           className="btn btn-primary me-2"
           data-bs-toggle="modal"
-          data-bs-target="#exampleModal"
+          data-bs-target="#exampleModa1"
           onClick={loginStatus ? signOutHandler : loginHandler}
         >
           {loginStatus ? "登出" : "登入"}
@@ -131,11 +137,51 @@ function App() {
           type="button"
           className="btn btn-danger"
           data-bs-toggle="modal"
-          data-bs-target="#exampleModal"
+          data-bs-target="#exampleModa1"
           onClick={loginCheck}
         >
           檢查是否登入
         </button>
+
+        <div
+          className="modal fade"
+          id="exampleModa2"
+          tabIndex="-1"
+          aria-labelledby="exampleModalLabe2"
+          aria-hidden="true"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title" id="exampleModalLabe2">
+                  {newOrEditButton ? "新增產品" : "編輯產品"}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">...</div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Close
+                </button>
+                <button type="button" className="btn btn-primary">
+                  Save changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
         <div
           className="modal fade"
           id="exampleModal"
@@ -170,12 +216,29 @@ function App() {
           </div>
         </div>
       </div>
+
+
+
+
+
+
       {loginStatus ? (
         <div>
           <div className="container">
             <div className="row mt-5">
               <div className="col-md-6">
-                <h2>產品列表</h2>
+                <div className="d-flex">
+                  <h2 className="me-3 mb-0">產品列表</h2>
+                  <button
+                    type="button"
+                    className="btn btn-success"
+                    data-bs-toggle="modal"
+                    data-bs-target="#exampleModa2"
+                    onClick={() => newProductHandler(true)}
+                  >
+                    新增
+                  </button>
+                </div>
                 <table className="table">
                   <thead>
                     <tr>
@@ -195,10 +258,19 @@ function App() {
                         <td>{item.is_enabled ? "已啟用" : "未啟用"}</td>
                         <td>
                           <button
-                            className="btn btn-primary"
+                            className="btn btn-primary me-2"
                             onClick={() => setTempProduct(item)}
                           >
                             查看細節
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#exampleModa2"
+                            onClick={() => setNewOrEditButton(false)}
+                          >
+                            刪除
                           </button>
                         </td>
                       </tr>
