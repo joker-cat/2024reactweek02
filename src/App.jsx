@@ -13,6 +13,7 @@ function App() {
   const [getProducts, setGetProducts] = useState([]);
   const [loginMessage, setLoginMessage] = useState("");
   const [tempProduct, setTempProduct] = useState(null);
+
   const [loginStatus, setLoginStatus] = useState(null);
   const [whichButton, setWhichButton] = useState(null);
   const [newOrEditButton, setNewOrEditButton] = useState(null);
@@ -32,7 +33,11 @@ function App() {
 
   useEffect(() => {
     modalRefMethod.current = new Modal(modalRef.current);
-    // myModal.show();
+    modalRef.current.addEventListener('hide.bs.modal', () => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    });
   }, []);
 
   //寫入input
@@ -74,7 +79,8 @@ function App() {
   }
 
   //編輯按鈕
-  function putProductBtn() {
+  function putProductBtn(obj) {
+    setTempProduct(obj);
     setNewOrEditButton(false);
     modalRefMethod.current.show();
   }
@@ -166,7 +172,7 @@ function App() {
 
         <div>
           <div className="row mt-5">
-            <div className={loginStatus?" col-12":"col-6"}>
+            <div className={loginStatus ? " col-12" : "col-6"}>
               <div className="d-flex">
                 <h2 className="me-3 mb-0">產品列表</h2>
                 <button
@@ -201,7 +207,7 @@ function App() {
                           onClick={() =>
                             !loginStatus
                               ? setTempProduct(item)
-                              : putProductBtn()
+                              : putProductBtn(item)
                           }
                         >
                           {!loginStatus ? "查看細節" : "編輯"}
@@ -228,7 +234,7 @@ function App() {
                 </tbody>
               </table>
             </div>
-            <div className={!loginStatus?"col-md-6":"d-none"}>
+            <div className={!loginStatus ? "col-md-6" : "d-none"}>
               <h2>單一產品細節</h2>
               {tempProduct ? ( //判斷是否有選擇商品
                 // 有就顯示選擇的商品
@@ -288,7 +294,44 @@ function App() {
                   aria-label="Close"
                 ></button>
               </div>
-              <div className="modal-body">...</div>
+              <div className="modal-body">
+                {tempProduct ? (
+                  <div className="card mb-3">
+                    <img
+                      src={tempProduct.imageUrl}
+                      className="card-img-top primary-image"
+                      alt="主圖"
+                    />
+                    <div className="card-body">
+                      <h5 className="card-title">
+                        {tempProduct.title}
+                        <span className="badge bg-primary ms-2">{}</span>
+                      </h5>
+                      <p className="card-text">
+                        商品描述：{tempProduct.description}
+                      </p>
+                      <p className="card-text">
+                        商品內容：{tempProduct.content}
+                      </p>
+                      <div className="d-flex">
+                        <p className="card-text text-secondary">
+                          <del>{tempProduct.origin_price}</del>
+                        </p>
+                        元 / {tempProduct.price} 元
+                      </div>
+                      <h5 className="mt-3">更多圖片：</h5>
+                      <div className="d-flex flex-wrap">
+                        {tempProduct.imagesUrl.map((image, index) => (
+                          <img className="w-50 p-2" key={index} src={image} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // 沒有就顯示"請選擇一個商品查看"
+                  <p className="text-secondary">請選擇一個商品查看</p>
+                )}
+              </div>
               <div className="modal-footer">
                 <button
                   type="button"
@@ -359,7 +402,38 @@ function App() {
                   aria-label="Close"
                 ></button>
               </div>
-              <div className="modal-body">...</div>
+              {/* 新增 編輯 */}
+              {/* <div className="modal-body">
+                <div className="card mb-3">
+                  <img
+                    src={tempProduct.imageUrl}
+                    className="card-img-top primary-image"
+                    alt="主圖"
+                  />
+                  <div className="card-body">
+                    <h5 className="card-title">
+                      {tempProduct.title}
+                      <span className="badge bg-primary ms-2">{}</span>
+                    </h5>
+                    <p className="card-text">
+                      商品描述：{tempProduct.description}
+                    </p>
+                    <p className="card-text">商品內容：{tempProduct.content}</p>
+                    <div className="d-flex">
+                      <p className="card-text text-secondary">
+                        <del>{tempProduct.origin_price}</del>
+                      </p>
+                      元 / {tempProduct.price} 元
+                    </div>
+                    <h5 className="mt-3">更多圖片：</h5>
+                    <div className="d-flex flex-wrap">
+                      {tempProduct.imagesUrl.map((image, index) => (
+                        <img className="w-50 p-2" key={index} src={image} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div> */}
               <div className="modal-footer">
                 <button
                   type="button"
