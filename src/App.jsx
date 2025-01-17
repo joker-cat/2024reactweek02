@@ -8,6 +8,7 @@ function App() {
   const env = import.meta.env;
   const baseUrl = env.VITE_API_URL;
   const signInUrl = env.VITE_SIGNIN_URL;
+  const putProductsUrl = env.VITE_PUT_PRODUCT;
   const loginCheckUrl = env.VITE_LOGIN_CHECK;
   const getProductsUrl = env.VITE_GET_PRODUCTS;
   const [getProducts, setGetProducts] = useState([]);
@@ -17,6 +18,20 @@ function App() {
   const [loginStatus, setLoginStatus] = useState(null);
   const [whichButton, setWhichButton] = useState(null);
   const [newOrEditButton, setNewOrEditButton] = useState(null);
+  const [token, setToken] = useState(null);
+  const [postProduct, setPostProduct] = useState({
+    title: "",
+    category: "",
+    origin_price: 0,
+    price: 0,
+    unit: "",
+    description: "",
+    content: "",
+    is_enabled: 0,
+    imageUrl: "",
+    imagesUrl: [],
+  });
+
   const modalRef = useRef(null);
   const modalRefMethod = useRef(null);
 
@@ -33,7 +48,7 @@ function App() {
 
   useEffect(() => {
     modalRefMethod.current = new Modal(modalRef.current);
-    modalRef.current.addEventListener('hide.bs.modal', () => {
+    modalRef.current.addEventListener("hide.bs.modal", () => {
       if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur();
       }
@@ -63,6 +78,7 @@ function App() {
       const res = await axios.post(`${baseUrl}${signInUrl}`, user);
       const token = res.data.token;
       document.cookie = `hexschool=${token}; path=/;`;
+      setToken(token);
       setLoginMessage(res.data.message);
       setLoginStatus(true);
       // getProductsHandler();
@@ -91,9 +107,15 @@ function App() {
       /(?:(?:^|.*;\s*)hexschool\s*\=\s*([^;]*).*$)|^.*$/,
       "$1"
     );
+    if (!myCookie) {
+      return;
+    }
+    console.log(myCookie);
+
+    setToken(myCookie);
     try {
       const config = {
-        headers: { Authorization: myCookie },
+        headers: { Authorization: token },
       };
       const res = await axios.post(`${baseUrl}${loginCheckUrl}`, {}, config);
       setLoginMessage(res.data.success ? "已登入" : "未登入");
@@ -111,6 +133,35 @@ function App() {
     setGetProducts(res.data.products);
   }
 
+  //寫入產品input
+  function productInputHandler(e) {
+    const name = e.target.name;
+    setTempProduct({
+      ...tempProduct,
+      [name]: e.target.value,
+    });
+  }
+
+  //修改產品
+  async function savePutProductHandler(obj) {
+    try {
+      const res = await axios.put(
+        `${baseUrl}${putProductsUrl}/${obj.id}`,
+        {
+          data: { ...obj },
+        },
+        {
+          headers: { Authorization: token },
+        }
+      );
+      console.log(res);
+
+      modalRefMethod.current.hide();
+      // console.log(obj);
+    } catch (error) {
+      console.log(error);
+    }
+  }
   // async function newProductHandler(str) {
   //   str === true ? setNewOrEditButton(true) : setNewOrEditButton(false);
   // }
@@ -155,7 +206,7 @@ function App() {
           type="button"
           className="btn btn-primary me-2"
           data-bs-toggle="modal"
-          data-bs-target="#exampleModa1"
+          data-bs-target="#exampleModal"
           onClick={loginStatus ? signOutHandler : loginHandler}
         >
           {loginStatus ? "登出" : "登入"}
@@ -164,7 +215,7 @@ function App() {
           type="button"
           className="btn btn-danger"
           data-bs-toggle="modal"
-          data-bs-target="#exampleModa1"
+          data-bs-target="#exampleModal"
           onClick={loginCheck}
         >
           檢查是否登入
@@ -202,7 +253,7 @@ function App() {
                       <td>{item.is_enabled ? "已啟用" : "未啟用"}</td>
                       <td>
                         <button
-                          className="btn btn-primary me-2"
+                          className="btn btn-warning me-2"
                           type="button"
                           onClick={() =>
                             !loginStatus
@@ -217,8 +268,8 @@ function App() {
                             type="button"
                             className={
                               loginStatus
-                                ? "btn btn-secondary"
-                                : "btn btn-secondary d-none"
+                                ? "btn btn-danger"
+                                : "btn btn-danger d-none"
                             }
                             data-bs-toggle="modal"
                             data-bs-target="#exampleModal2"
@@ -296,6 +347,160 @@ function App() {
               </div>
               <div className="modal-body">
                 {tempProduct ? (
+                  <form>
+                    <div className="mb-3">
+                      <label htmlFor="title" className="form-label">
+                        產品名稱
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="title"
+                        name="title"
+                        value={tempProduct.title}
+                        onChange={productInputHandler}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label htmlFor="category" className="form-label">
+                        分類
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="category"
+                        name="category"
+                        value={tempProduct.category}
+                        onChange={productInputHandler}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label htmlFor="origin_price" className="form-label">
+                        原價
+                      </label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        id="origin_price"
+                        name="origin_price"
+                        value={tempProduct.origin_price}
+                        onChange={productInputHandler}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label htmlFor="price" className="form-label">
+                        售價
+                      </label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        id="price"
+                        name="price"
+                        value={tempProduct.price}
+                        onChange={productInputHandler}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label htmlFor="unit" className="form-label">
+                        單位
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="unit"
+                        name="unit"
+                        value={tempProduct.unit}
+                        onChange={productInputHandler}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label htmlFor="description" className="form-label">
+                        描述
+                      </label>
+                      <textarea
+                        className="form-control"
+                        id="description"
+                        name="description"
+                        value={tempProduct.description}
+                        onChange={productInputHandler}
+                      ></textarea>
+                    </div>
+                    <div className="mb-3">
+                      <label htmlFor="content" className="form-label">
+                        內容
+                      </label>
+                      <textarea
+                        className="form-control"
+                        id="content"
+                        name="content"
+                        value={tempProduct.content}
+                        onChange={productInputHandler}
+                      ></textarea>
+                    </div>
+                    <div className="mb-3">
+                      <label htmlFor="is_enabled" className="form-label">
+                        是否啟用
+                      </label>
+                      <select
+                        className="form-select"
+                        id="is_enabled"
+                        name="is_enabled"
+                        value={tempProduct.is_enabled}
+                        onChange={productInputHandler}
+                      >
+                        <option value="1">啟用</option>
+                        <option value="0">未啟用</option>
+                      </select>
+                    </div>
+                    <div className="mb-3">
+                      <label htmlFor="imageUrl" className="form-label">
+                        主圖網址
+                      </label>
+                      <img
+                        src={tempProduct.imageUrl}
+                        className="w-100 mb-3"
+                        alt="主圖"
+                      />
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="imageUrl"
+                        name="imageUrl"
+                        value={tempProduct.imageUrl}
+                        onChange={productInputHandler}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label htmlFor="imagesUrl" className="form-label">
+                        圖片網址
+                      </label>
+                      {tempProduct.imagesUrl.map((url, index) => (
+                        <div key={index}>
+                          <img className="w-50 mb-3" src={url} alt="附圖" />
+                          <input
+                            key={index}
+                            type="text"
+                            className="form-control mb-2"
+                            name="imagesUrl"
+                            value={url}
+                            onChange={(e) => {
+                              const newImagesUrl = [...tempProduct.imagesUrl];
+                              newImagesUrl[index] = e.target.value;
+                              setTempProduct({
+                                ...tempProduct,
+                                imagesUrl: newImagesUrl,
+                              });
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </form>
+                ) : (
+                  <p className="text-secondary">請選擇一個商品查看</p>
+                )}
+
+                {/* {tempProduct ? (
                   <div className="card mb-3">
                     <img
                       src={tempProduct.imageUrl}
@@ -330,7 +535,7 @@ function App() {
                 ) : (
                   // 沒有就顯示"請選擇一個商品查看"
                   <p className="text-secondary">請選擇一個商品查看</p>
-                )}
+                )} */}
               </div>
               <div className="modal-footer">
                 <button
@@ -338,10 +543,16 @@ function App() {
                   className="btn btn-secondary"
                   data-bs-dismiss="modal"
                 >
-                  Close
+                  取消
                 </button>
-                <button type="button" className="btn btn-primary">
-                  Save changes
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    savePutProductHandler(tempProduct);
+                  }}
+                >
+                  確定修改
                 </button>
               </div>
             </div>
