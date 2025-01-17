@@ -11,6 +11,9 @@ function App() {
   const putProductsUrl = env.VITE_PUT_PRODUCT;
   const loginCheckUrl = env.VITE_LOGIN_CHECK;
   const getProductsUrl = env.VITE_GET_PRODUCTS;
+  const postAdminProductsUrl = env.VITE_ADMIN_POST_PRODUCT;
+  const getAdminProductsUrl = env.VITE_ADMIN_GET_PRODUCT;
+
   const [getProducts, setGetProducts] = useState([]);
   const [loginMessage, setLoginMessage] = useState("");
   const [tempProduct, setTempProduct] = useState(null);
@@ -42,8 +45,10 @@ function App() {
 
   // 只在初次渲染時執行
   useEffect(() => {
-    loginCheck();
-    getProductsHandler();
+    (async () => {
+      await loginCheck();
+      await getProductsHandler();
+    })();
   }, []);
 
   useEffect(() => {
@@ -81,7 +86,6 @@ function App() {
       setToken(token);
       setLoginMessage(res.data.message);
       setLoginStatus(true);
-      // getProductsHandler();
     } catch (error) {
       setLoginMessage(error.response.data.message);
       setLoginStatus(false);
@@ -120,19 +124,16 @@ function App() {
       "$1"
     );
     if (!myCookie) {
+      setLoginMessage("未登入");
       return;
     }
     console.log(myCookie);
-
     setToken(myCookie);
+    console.log(token);
+
     try {
-      const config = {
-        headers: { Authorization: token },
-      };
-      const res = await axios.post(`${baseUrl}${loginCheckUrl}`, {}, config);
-      setLoginMessage(res.data.success ? "已登入" : "未登入");
+      setLoginMessage("已登入");
       setLoginStatus(true);
-      // getProductsHandler();
     } catch (error) {
       setLoginMessage(error.response.data.message);
       setLoginStatus(false);
@@ -141,16 +142,31 @@ function App() {
 
   //取得產品列表
   async function getProductsHandler() {
-    const res = await axios.get(`${baseUrl}${getProductsUrl}`);
+    console.log(loginStatus);
+    
+    const userStatus = !loginStatus ? getProductsUrl : getAdminProductsUrl;
+    console.log(userStatus);
+
+    const res = await axios.get(`${baseUrl}${userStatus}`,{} ,{
+      headers: { Authorization: token },
+    });
+
+    console.log(res);
     setGetProducts(res.data.products);
   }
 
   //寫入產品input
   function productInputHandler(e) {
     const name = e.target.name;
+
+    const turnType =
+      name === "origin_price" || name === "price"
+        ? (e.target.value = Number(e.target.value))
+        : e.target.value;
+
     setTempProduct({
       ...tempProduct,
-      [name]: e.target.value,
+      [name]: turnType,
     });
   }
 
@@ -166,6 +182,29 @@ function App() {
           headers: { Authorization: token },
         }
       );
+      if (res.data.success) {
+        getProductsHandler();
+      }
+      modalRefMethod.current.hide();
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  //新增產品
+  async function savePostProductHandler() {
+    try {
+      const res = await axios.post(
+        `${baseUrl}${postAdminProductsUrl}`,
+        {
+          data: { ...tempProduct },
+        },
+        {
+          headers: { Authorization: token },
+        }
+      );
+      console.log(res);
+
       if (res.data.success) {
         getProductsHandler();
       }
@@ -243,23 +282,31 @@ function App() {
                   新增
                 </button>
               </div>
-              <table className="table">
+              {/* {JSON.stringify(getProducts)} */}
+              <table className="table align-middle ">
                 <thead>
                   <tr>
-                    <th>產品名稱</th>
-                    <th>原價</th>
-                    <th>售價</th>
-                    <th>是否啟用</th>
-                    <th>查看細節</th>
+                    <th style={{ width: "40%" }}>產品名稱</th>
+                    <th style={{ width: "15%" }}>原價</th>
+                    <th style={{ width: "15%" }}>售價</th>
+                    <th style={{ width: "10%" }}>是否啟用</th>
+                    <th style={{ width: "20%" }}>查看細節</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {getProducts.map((item, index) => (
+                  {getProducts.map((item) => (
                     <tr
-                      key={index}
+                      key={item.id}
                       className={Number(item.is_enabled) ? "table-active" : ""}
                     >
-                      <td>{item.category}</td>
+                      <td>
+                        <img
+                          src={item.imageUrl}
+                          alt="商品圖片"
+                          className="w-25 me-3"
+                        />
+                        <span>{item.title}</span>
+                      </td>
                       <td>{item.origin_price}</td>
                       <td>{item.price}</td>
                       <td>{Number(item.is_enabled) ? "已啟用" : "未啟用"}</td>
@@ -485,12 +532,18 @@ function App() {
                       />
                     </div>
                     <div className="mb-3">
-                      <label htmlFor="imagesUrl" className="form-label">
+                      <label htmlFor="imagesUrl" className="form-label d-block">
                         圖片網址
-                      </label><br/>
+                      </label>
                       {tempProduct.imagesUrl.length === 0 ? (
                         <>
-                          {tempProduct.imagesUrl || <img className="w-50 mb-3" src={tempProduct.imagesUrl} alt="附圖" />}
+                          {tempProduct.imagesUrl || (
+                            <img
+                              className="w-50 mb-3"
+                              src={tempProduct.imagesUrl}
+                              alt="附圖"
+                            />
+                          )}
                           <input
                             type="text"
                             className="form-control mb-2"
@@ -506,10 +559,9 @@ function App() {
                         </>
                       ) : (
                         tempProduct.imagesUrl.map((url, index) => (
-                          <>
+                          <div key={index}>
                             <img className="w-50 mb-3" src={url} alt="附圖" />
                             <input
-                              key={index}
                               type="text"
                               className="form-control mb-2"
                               name="imagesUrl"
@@ -523,7 +575,7 @@ function App() {
                                 });
                               }}
                             />
-                          </>
+                          </div>
                         ))
                       )}
                     </div>
@@ -581,10 +633,12 @@ function App() {
                   type="button"
                   className="btn btn-primary"
                   onClick={() => {
-                    savePutProductHandler(tempProduct);
+                    newOrEditButton
+                      ? savePostProductHandler()
+                      : savePutProductHandler(tempProduct);
                   }}
                 >
-                  確定修改
+                  {newOrEditButton ? "確定新增" : "確定修改"}
                 </button>
               </div>
             </div>
