@@ -29,7 +29,7 @@ function App() {
     content: "",
     is_enabled: 0,
     imageUrl: "",
-    imagesUrl: [],
+    imagesUrl: [...Array(5).fill("1")],
   });
 
   const modalRef = useRef(null);
@@ -91,6 +91,18 @@ function App() {
   //新增按鈕
   function newProductBtn() {
     setNewOrEditButton(true);
+    setTempProduct({
+      title: "",
+      category: "",
+      origin_price: 0,
+      price: 0,
+      unit: "",
+      description: "",
+      content: "",
+      is_enabled: 0,
+      imageUrl: "",
+      imagesUrl: [],
+    });
     modalRefMethod.current.show();
   }
 
@@ -154,17 +166,14 @@ function App() {
           headers: { Authorization: token },
         }
       );
-      console.log(res);
-
+      if (res.data.success) {
+        getProductsHandler();
+      }
       modalRefMethod.current.hide();
-      // console.log(obj);
     } catch (error) {
       console.log(error);
     }
   }
-  // async function newProductHandler(str) {
-  //   str === true ? setNewOrEditButton(true) : setNewOrEditButton(false);
-  // }
 
   return (
     <div className="p-5">
@@ -246,11 +255,14 @@ function App() {
                 </thead>
                 <tbody>
                   {getProducts.map((item, index) => (
-                    <tr key={index}>
+                    <tr
+                      key={index}
+                      className={Number(item.is_enabled) ? "table-active" : ""}
+                    >
                       <td>{item.category}</td>
                       <td>{item.origin_price}</td>
                       <td>{item.price}</td>
-                      <td>{item.is_enabled ? "已啟用" : "未啟用"}</td>
+                      <td>{Number(item.is_enabled) ? "已啟用" : "未啟用"}</td>
                       <td>
                         <button
                           className="btn btn-warning me-2"
@@ -456,11 +468,13 @@ function App() {
                       <label htmlFor="imageUrl" className="form-label">
                         主圖網址
                       </label>
-                      <img
-                        src={tempProduct.imageUrl}
-                        className="w-100 mb-3"
-                        alt="主圖"
-                      />
+                      {tempProduct.imageUrl && (
+                        <img
+                          src={tempProduct.imageUrl}
+                          className="w-100 mb-3"
+                          alt="主圖"
+                        />
+                      )}
                       <input
                         type="text"
                         className="form-control"
@@ -473,27 +487,45 @@ function App() {
                     <div className="mb-3">
                       <label htmlFor="imagesUrl" className="form-label">
                         圖片網址
-                      </label>
-                      {tempProduct.imagesUrl.map((url, index) => (
-                        <div key={index}>
-                          <img className="w-50 mb-3" src={url} alt="附圖" />
+                      </label><br/>
+                      {tempProduct.imagesUrl.length === 0 ? (
+                        <>
+                          {tempProduct.imagesUrl || <img className="w-50 mb-3" src={tempProduct.imagesUrl} alt="附圖" />}
                           <input
-                            key={index}
                             type="text"
                             className="form-control mb-2"
                             name="imagesUrl"
-                            value={url}
+                            value=""
                             onChange={(e) => {
-                              const newImagesUrl = [...tempProduct.imagesUrl];
-                              newImagesUrl[index] = e.target.value;
                               setTempProduct({
                                 ...tempProduct,
-                                imagesUrl: newImagesUrl,
+                                imagesUrl: [e.target.value],
                               });
                             }}
                           />
-                        </div>
-                      ))}
+                        </>
+                      ) : (
+                        tempProduct.imagesUrl.map((url, index) => (
+                          <>
+                            <img className="w-50 mb-3" src={url} alt="附圖" />
+                            <input
+                              key={index}
+                              type="text"
+                              className="form-control mb-2"
+                              name="imagesUrl"
+                              value={url}
+                              onChange={(e) => {
+                                const newImagesUrl = [...tempProduct.imagesUrl];
+                                newImagesUrl[index] = e.target.value;
+                                setTempProduct({
+                                  ...tempProduct,
+                                  imagesUrl: newImagesUrl,
+                                });
+                              }}
+                            />
+                          </>
+                        ))
+                      )}
                     </div>
                   </form>
                 ) : (
