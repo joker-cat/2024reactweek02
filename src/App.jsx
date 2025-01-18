@@ -13,27 +13,14 @@ function App() {
   const getProductsUrl = env.VITE_GET_PRODUCTS;
   const postAdminProductsUrl = env.VITE_ADMIN_POST_PRODUCT;
   const getAdminProductsUrl = env.VITE_ADMIN_GET_PRODUCT;
-
-  const [getProducts, setGetProducts] = useState([]);
+  const [getProducts, setGetProducts] = useState([]); //管理員or使用者 產品列表
   const [loginMessage, setLoginMessage] = useState("");
   const [tempProduct, setTempProduct] = useState(null);
-
-  const [loginStatus, setLoginStatus] = useState(null);
-  const [whichButton, setWhichButton] = useState(null);
-  const [newOrEditButton, setNewOrEditButton] = useState(null);
+  const [deleteProductId, setDeleteProductId] = useState("");
+  const [loginStatus, setLoginStatus] = useState(false);
+  const [whichButton, setWhichButton] = useState(false);
+  const [newOrEditButton, setNewOrEditButton] = useState(false);
   const [token, setToken] = useState(null);
-  const [postProduct, setPostProduct] = useState({
-    title: "",
-    category: "",
-    origin_price: 0,
-    price: 0,
-    unit: "",
-    description: "",
-    content: "",
-    is_enabled: 0,
-    imageUrl: "",
-    imagesUrl: [...Array(5).fill("1")],
-  });
 
   const modalRef = useRef(null);
   const modalRefMethod = useRef(null);
@@ -43,11 +30,9 @@ function App() {
     password: "",
   });
 
-  // 只在初次渲染時執行
   useEffect(() => {
     (async () => {
-      await loginCheck();
-      await getProductsHandler();
+      await checkCookie();
     })();
   }, []);
 
@@ -72,8 +57,10 @@ function App() {
   //登出
   function signOutHandler() {
     document.cookie = "hexschool=; max-age=0; path=/;";
-    setLoginMessage("登出成功");
+    getProductsHandler();
+    setLoginMessage("已登出");
     setLoginStatus(false);
+    setTempProduct(null);
   }
 
   //登入
@@ -84,8 +71,10 @@ function App() {
       const token = res.data.token;
       document.cookie = `hexschool=${token}; path=/;`;
       setToken(token);
+
       setLoginMessage(res.data.message);
       setLoginStatus(true);
+      getAdminProductsHandler();
     } catch (error) {
       setLoginMessage(error.response.data.message);
       setLoginStatus(false);
@@ -117,53 +106,119 @@ function App() {
     modalRefMethod.current.show();
   }
 
-  //檢查登入
-  async function loginCheck() {
+  //檢查cookie
+  function checkCookie() {
     const myCookie = document.cookie.replace(
       /(?:(?:^|.*;\s*)hexschool\s*\=\s*([^;]*).*$)|^.*$/,
       "$1"
     );
-    if (!myCookie) {
-      setLoginMessage("未登入");
-      return;
-    }
-    console.log(myCookie);
+    if (myCookie === "") return getProductsHandler();
     setToken(myCookie);
-    console.log(token);
+    setLoginStatus(true);
+    getAdminProductsHandler();
+  }
 
+  //取得使用者產品列表
+  async function getProductsHandler() {
     try {
-      setLoginMessage("已登入");
-      setLoginStatus(true);
+      const res = await axios.get(`${baseUrl}${getProductsUrl}`);
+      console.log(res);
+      
+      const products = res.data.products;
+      setGetProducts(products);
+      // const turnArray = Object.keys(products).map((key) => {
+      //   return { ...products[key] };
+      // });
+      // setGetProducts(turnArray);
     } catch (error) {
-      setLoginMessage(error.response.data.message);
-      setLoginStatus(false);
+      console.log(error);
     }
   }
 
-  //取得產品列表
-  async function getProductsHandler() {
-    console.log(loginStatus);
-    
-    const userStatus = !loginStatus ? getProductsUrl : getAdminProductsUrl;
-    console.log(userStatus);
+  //取得管理員產品列表
+  async function getAdminProductsHandler() {
+    try {
+      const cookie = document.cookie.replace(
+        /(?:(?:^|.*;\s*)hexschool\s*\=\s*([^;]*).*$)|^.*$/,
+        "$1"
+      );
+      const res = await axios.get(`${baseUrl}${getAdminProductsUrl}`, {
+        headers: { Authorization: cookie },
+      });
+      const products = res.data.products;
+      const turnArray = Object.keys(products).map((key) => {
+        return { ...products[key] };
+      });
+      setGetProducts(turnArray);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
-    const res = await axios.get(`${baseUrl}${userStatus}`,{} ,{
-      headers: { Authorization: token },
-    });
+  //檢查登入
+  async function loginCheck() {
+    const cookie = document.cookie.replace(
+      /(?:(?:^|.*;\s*)hexschool\s*\=\s*([^;]*).*$)|^.*$/,
+      "$1"
+    );
+    const config = {
+      headers: { Authorization: cookie },
+    };
+    try {
+      const checkRes = await axios.post(
+        `${baseUrl}${loginCheckUrl}`,
+        {},
+        config
+      );
+      if (checkRes.data.success === true) {
+        setLoginMessage("已登入");
+      }
+    } catch (error) {
+      setLoginMessage(error.response.data.message);
+    }
 
-    console.log(res);
-    setGetProducts(res.data.products);
+    // https://ec-course-api.hexschool.io/v2/api/user/check
+
+    // if (!myCookie) {
+    //
+    //   return;
+    // }
+    // console.log(myCookie);
+    // setToken(myCookie);
+    // console.log(token);
+
+    // try {
+    // setLoginMessage("已登入");
+    // setLoginStatus(true);
+    // } catch (error) {
+    // setLoginMessage(error.response.data.message);
+    // setLoginStatus(false);
+    // }
+  }
+
+  //刪除
+  async function deleteProductHandler(id) {
+    try {
+      const res = await axios.delete(`${baseUrl}${putProductsUrl}/${id}`, {
+        headers: { Authorization: token },
+      });
+      if (res.data.success) {
+        getAdminProductsHandler();
+      }
+      modalRefMethod.current.hide();
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   //寫入產品input
   function productInputHandler(e) {
     const name = e.target.name;
-
     const turnType =
-      name === "origin_price" || name === "price"
+      name === "origin_price" || name === "price" || name === "is_enabled"
         ? (e.target.value = Number(e.target.value))
         : e.target.value;
-
+    
     setTempProduct({
       ...tempProduct,
       [name]: turnType,
@@ -182,8 +237,9 @@ function App() {
           headers: { Authorization: token },
         }
       );
+
       if (res.data.success) {
-        getProductsHandler();
+        getAdminProductsHandler();
       }
       modalRefMethod.current.hide();
     } catch (error) {
@@ -203,10 +259,9 @@ function App() {
           headers: { Authorization: token },
         }
       );
-      console.log(res);
 
       if (res.data.success) {
-        getProductsHandler();
+        getAdminProductsHandler();
       }
       modalRefMethod.current.hide();
     } catch (error) {
@@ -271,18 +326,19 @@ function App() {
 
         <div>
           <div className="row mt-5">
-            <div className={loginStatus ? " col-12" : "col-6"}>
+            <div className={loginStatus ? " col-12" : "col-7"}>
               <div className="d-flex">
                 <h2 className="me-3 mb-0">產品列表</h2>
-                <button
-                  type="button"
-                  className="btn btn-success"
-                  onClick={() => newProductBtn()}
-                >
-                  新增
-                </button>
+                {loginStatus && (
+                  <button
+                    type="button"
+                    className="btn btn-success"
+                    onClick={() => newProductBtn()}
+                  >
+                    新增
+                  </button>
+                )}
               </div>
-              {/* {JSON.stringify(getProducts)} */}
               <table className="table align-middle ">
                 <thead>
                   <tr>
@@ -332,6 +388,7 @@ function App() {
                             }
                             data-bs-toggle="modal"
                             data-bs-target="#exampleModal2"
+                            onClick={() => setDeleteProductId(item.id)}
                           >
                             刪除
                           </button>
@@ -344,7 +401,7 @@ function App() {
                 </tbody>
               </table>
             </div>
-            <div className={!loginStatus ? "col-md-6" : "d-none"}>
+            <div className={!loginStatus ? "col-5" : "d-none"}>
               <h2>單一產品細節</h2>
               {tempProduct ? ( //判斷是否有選擇商品
                 // 有就顯示選擇的商品
@@ -583,43 +640,6 @@ function App() {
                 ) : (
                   <p className="text-secondary">請選擇一個商品查看</p>
                 )}
-
-                {/* {tempProduct ? (
-                  <div className="card mb-3">
-                    <img
-                      src={tempProduct.imageUrl}
-                      className="card-img-top primary-image"
-                      alt="主圖"
-                    />
-                    <div className="card-body">
-                      <h5 className="card-title">
-                        {tempProduct.title}
-                        <span className="badge bg-primary ms-2">{}</span>
-                      </h5>
-                      <p className="card-text">
-                        商品描述：{tempProduct.description}
-                      </p>
-                      <p className="card-text">
-                        商品內容：{tempProduct.content}
-                      </p>
-                      <div className="d-flex">
-                        <p className="card-text text-secondary">
-                          <del>{tempProduct.origin_price}</del>
-                        </p>
-                        元 / {tempProduct.price} 元
-                      </div>
-                      <h5 className="mt-3">更多圖片：</h5>
-                      <div className="d-flex flex-wrap">
-                        {tempProduct.imagesUrl.map((image, index) => (
-                          <img className="w-50 p-2" key={index} src={image} />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  // 沒有就顯示"請選擇一個商品查看"
-                  <p className="text-secondary">請選擇一個商品查看</p>
-                )} */}
               </div>
               <div className="modal-footer">
                 <button
@@ -690,7 +710,7 @@ function App() {
             <div className="modal-content">
               <div className="modal-header">
                 <h1 className="modal-title fs-5" id="exampleModalLabel2">
-                  Modal title
+                  警告
                 </h1>
                 <button
                   type="button"
@@ -699,48 +719,22 @@ function App() {
                   aria-label="Close"
                 ></button>
               </div>
-              {/* 新增 編輯 */}
-              {/* <div className="modal-body">
-                <div className="card mb-3">
-                  <img
-                    src={tempProduct.imageUrl}
-                    className="card-img-top primary-image"
-                    alt="主圖"
-                  />
-                  <div className="card-body">
-                    <h5 className="card-title">
-                      {tempProduct.title}
-                      <span className="badge bg-primary ms-2">{}</span>
-                    </h5>
-                    <p className="card-text">
-                      商品描述：{tempProduct.description}
-                    </p>
-                    <p className="card-text">商品內容：{tempProduct.content}</p>
-                    <div className="d-flex">
-                      <p className="card-text text-secondary">
-                        <del>{tempProduct.origin_price}</del>
-                      </p>
-                      元 / {tempProduct.price} 元
-                    </div>
-                    <h5 className="mt-3">更多圖片：</h5>
-                    <div className="d-flex flex-wrap">
-                      {tempProduct.imagesUrl.map((image, index) => (
-                        <img className="w-50 p-2" key={index} src={image} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div> */}
+              <div className="modal-body">確定要刪除{deleteProductId}嗎？</div>
               <div className="modal-footer">
                 <button
                   type="button"
                   className="btn btn-secondary"
                   data-bs-dismiss="modal"
                 >
-                  Close
+                  取消
                 </button>
-                <button type="button" className="btn btn-primary">
-                  Save changes
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  data-bs-dismiss="modal"
+                  onClick={() => deleteProductHandler(deleteProductId)}
+                >
+                  確定
                 </button>
               </div>
             </div>
