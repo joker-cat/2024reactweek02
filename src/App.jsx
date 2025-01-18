@@ -14,13 +14,13 @@ function App() {
   const postAdminProductsUrl = env.VITE_ADMIN_POST_PRODUCT;
   const getAdminProductsUrl = env.VITE_ADMIN_GET_PRODUCT;
   const [getProducts, setGetProducts] = useState([]); //管理員or使用者 產品列表
-  const [loginMessage, setLoginMessage] = useState("");
-  const [tempProduct, setTempProduct] = useState(null);
-  const [deleteProductId, setDeleteProductId] = useState("");
-  const [loginStatus, setLoginStatus] = useState(false);
-  const [whichButton, setWhichButton] = useState(false);
-  const [newOrEditButton, setNewOrEditButton] = useState(false);
-  const [token, setToken] = useState(null);
+  const [loginMessage, setLoginMessage] = useState("");//登入訊息
+  const [tempProduct, setTempProduct] = useState(null);//暫存產品
+  const [deleteProductId, setDeleteProductId] = useState("");//刪除產品id
+  const [loginStatus, setLoginStatus] = useState(false);//登入狀態
+  const [whichButton, setWhichButton] = useState(false);//登入or登出
+  const [newOrEditButton, setNewOrEditButton] = useState(false);//新增or編輯
+  const [token, setToken] = useState(null);//token
 
   const modalRef = useRef(null);
   const modalRefMethod = useRef(null);
@@ -122,14 +122,8 @@ function App() {
   async function getProductsHandler() {
     try {
       const res = await axios.get(`${baseUrl}${getProductsUrl}`);
-      console.log(res);
-      
       const products = res.data.products;
       setGetProducts(products);
-      // const turnArray = Object.keys(products).map((key) => {
-      //   return { ...products[key] };
-      // });
-      // setGetProducts(turnArray);
     } catch (error) {
       console.log(error);
     }
