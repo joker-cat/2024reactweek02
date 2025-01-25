@@ -3,6 +3,9 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Modal } from "bootstrap";
 import Pagunation from "./components/Pagunation";
+import NewOrEditModal from "./components/NewOrEditModal";
+import DeleteModal from "./components/DeleteModal";
+import IsSignin from "./components/IsSignin";
 import "./assets/scss/all.scss";
 
 function App() {
@@ -454,7 +457,15 @@ function App() {
           getProductsHandler={getProductsHandler}
           loginStatus={loginStatus}
         />
-        <div
+        <NewOrEditModal
+          modalRef={modalRef}
+          newOrEditButton={newOrEditButton}
+          tempProduct={tempProduct}
+          productInputHandler={productInputHandler}
+          savePostProductHandler={savePostProductHandler}
+          savePutProductHandler={savePutProductHandler}
+        />
+        {/* <div
           className="modal fade"
           ref={modalRef}
           tabIndex="-1"
@@ -675,9 +686,9 @@ function App() {
               </div>
             </div>
           </div>
-        </div>
-
-        <div
+        </div> */}
+        <IsSignin whichButton={whichButton} loginMessage={loginMessage} />
+        {/* <div
           className="modal fade"
           id="exampleModal"
           tabIndex="-1"
@@ -709,9 +720,12 @@ function App() {
               </div>
             </div>
           </div>
-        </div>
-
-        <div
+        </div> */}
+        <DeleteModal
+          deleteProductId={deleteProductId}
+          deleteProductHandler={deleteProductHandler}
+        />
+        {/* <div
           className="modal fade"
           id="exampleModal2"
           tabIndex="-1"
@@ -751,7 +765,7 @@ function App() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
