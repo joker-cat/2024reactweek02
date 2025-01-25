@@ -1,4 +1,9 @@
-function Pagunation({ pageinfo, getAdminProductsHandler }) {
+function Pagunation({
+  pageinfo,
+  getProductsHandler,
+  getAdminProductsHandler,
+  loginStatus,
+}) {
   return (
     <nav aria-label="Page navigation example">
       <ul className="pagination justify-content-center">
@@ -10,7 +15,11 @@ function Pagunation({ pageinfo, getAdminProductsHandler }) {
         {Array.from({ length: pageinfo.total_pages }).map((_, idx) => {
           return (
             <li
-              onClick={() => getAdminProductsHandler(idx + 1)}
+              onClick={() =>
+                loginStatus
+                  ? getAdminProductsHandler(idx + 1)
+                  : getProductsHandler(idx + 1)
+              }
               className={`page-item ${
                 pageinfo.current_page === idx + 1 && "active"
               }`}

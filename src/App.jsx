@@ -12,18 +12,19 @@ function App() {
   const putProductsUrl = env.VITE_PUT_PRODUCT;
   const loginCheckUrl = env.VITE_LOGIN_CHECK;
   const getProductsUrl = env.VITE_GET_PRODUCTS;
+  const getPageProductsUrl = env.VITE_GET_PAGEPRODUCTS;
   const postAdminProductsUrl = env.VITE_ADMIN_POST_PRODUCT;
   const getAdminProductsUrl = env.VITE_ADMIN_GET_PRODUCT;
   const getAdminPageProductsUrl = env.VITE_ADMIN_GET_PAGEPRODUCT;
-  
+
   const [getProducts, setGetProducts] = useState([]); //管理員or使用者 產品列表
-  const [loginMessage, setLoginMessage] = useState("");//登入訊息
-  const [tempProduct, setTempProduct] = useState(null);//暫存產品
-  const [deleteProductId, setDeleteProductId] = useState("");//刪除產品id
-  const [loginStatus, setLoginStatus] = useState(false);//登入狀態
-  const [whichButton, setWhichButton] = useState(false);//登入or登出
-  const [newOrEditButton, setNewOrEditButton] = useState(false);//新增or編輯
-  const [token, setToken] = useState(null);//token
+  const [loginMessage, setLoginMessage] = useState(""); //登入訊息
+  const [tempProduct, setTempProduct] = useState(null); //暫存產品
+  const [deleteProductId, setDeleteProductId] = useState(""); //刪除產品id
+  const [loginStatus, setLoginStatus] = useState(false); //登入狀態
+  const [whichButton, setWhichButton] = useState(false); //登入or登出
+  const [newOrEditButton, setNewOrEditButton] = useState(false); //新增or編輯
+  const [token, setToken] = useState(null); //token
   const [pageinfo, setpageinfo] = useState({});
   const modalRef = useRef(null);
   const modalRefMethod = useRef(null);
@@ -122,12 +123,14 @@ function App() {
   }
 
   //取得使用者產品列表
-  async function getProductsHandler() {
+  async function getProductsHandler(page = 1) {
     try {
-      const res = await axios.get(`${baseUrl}${getProductsUrl}`);
+      const res = await axios.get(
+        `${baseUrl}${getPageProductsUrl}?page=${page}`
+      );
       const products = res.data.products;
-      
       setGetProducts(products);
+      setpageinfo(res.data.pagination);
     } catch (error) {
       console.log(error);
     }
@@ -140,17 +143,19 @@ function App() {
         /(?:(?:^|.*;\s*)hexschool\s*\=\s*([^;]*).*$)|^.*$/,
         "$1"
       );
-      const res = await axios.get(`${baseUrl}${getAdminPageProductsUrl}?page=${page}`, {
-        headers: { Authorization: cookie },
-      });
+      const res = await axios.get(
+        `${baseUrl}${getAdminPageProductsUrl}?page=${page}`,
+        {
+          headers: { Authorization: cookie },
+        }
+      );
       const products = res.data.products;
       const turnArray = Object.keys(products).map((key) => {
         return { ...products[key] };
       });
       setGetProducts(turnArray);
-      
+
       setpageinfo(res.data.pagination);
-      
     } catch (error) {
       console.log(error);
     }
@@ -219,7 +224,7 @@ function App() {
       name === "origin_price" || name === "price" || name === "is_enabled"
         ? (e.target.value = Number(e.target.value))
         : e.target.value;
-    
+
     setTempProduct({
       ...tempProduct,
       [name]: turnType,
@@ -401,7 +406,6 @@ function App() {
                   ))}
                 </tbody>
               </table>
-
             </div>
             <div className={!loginStatus ? "col-5" : "d-none"}>
               <h2>單一產品細節</h2>
@@ -444,7 +448,12 @@ function App() {
           </div>
         </div>
 
-        <Pagunation pageinfo={pageinfo} getAdminProductsHandler={getAdminProductsHandler}/>
+        <Pagunation
+          pageinfo={pageinfo}
+          getAdminProductsHandler={getAdminProductsHandler}
+          getProductsHandler={getProductsHandler}
+          loginStatus={loginStatus}
+        />
         <div
           className="modal fade"
           ref={modalRef}
