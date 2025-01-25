@@ -464,6 +464,7 @@ function App() {
           productInputHandler={productInputHandler}
           savePostProductHandler={savePostProductHandler}
           savePutProductHandler={savePutProductHandler}
+          setTempProduct={setTempProduct}
         />
         {/* <div
           className="modal fade"

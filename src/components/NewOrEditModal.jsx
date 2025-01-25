@@ -5,6 +5,7 @@ function NewOrEditModal({
   productInputHandler,
   savePostProductHandler,
   savePutProductHandler,
+  setTempProduct
 }) {
   return (
     <div className="modal fade" ref={modalRef} tabIndex="-1" aria-hidden="true">
