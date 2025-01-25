@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 
 import axios from "axios";
 import { Modal } from "bootstrap";
+import Pagunation from "./components/Pagunation";
 import "./assets/scss/all.scss";
 
 function App() {
@@ -13,6 +14,8 @@ function App() {
   const getProductsUrl = env.VITE_GET_PRODUCTS;
   const postAdminProductsUrl = env.VITE_ADMIN_POST_PRODUCT;
   const getAdminProductsUrl = env.VITE_ADMIN_GET_PRODUCT;
+  const getAdminPageProductsUrl = env.VITE_ADMIN_GET_PAGEPRODUCT;
+  
   const [getProducts, setGetProducts] = useState([]); //管理員or使用者 產品列表
   const [loginMessage, setLoginMessage] = useState("");//登入訊息
   const [tempProduct, setTempProduct] = useState(null);//暫存產品
@@ -21,7 +24,7 @@ function App() {
   const [whichButton, setWhichButton] = useState(false);//登入or登出
   const [newOrEditButton, setNewOrEditButton] = useState(false);//新增or編輯
   const [token, setToken] = useState(null);//token
-
+  const [pageinfo, setpageinfo] = useState({});
   const modalRef = useRef(null);
   const modalRefMethod = useRef(null);
 
@@ -123,6 +126,7 @@ function App() {
     try {
       const res = await axios.get(`${baseUrl}${getProductsUrl}`);
       const products = res.data.products;
+      
       setGetProducts(products);
     } catch (error) {
       console.log(error);
@@ -130,13 +134,13 @@ function App() {
   }
 
   //取得管理員產品列表
-  async function getAdminProductsHandler() {
+  async function getAdminProductsHandler(page = 1) {
     try {
       const cookie = document.cookie.replace(
         /(?:(?:^|.*;\s*)hexschool\s*\=\s*([^;]*).*$)|^.*$/,
         "$1"
       );
-      const res = await axios.get(`${baseUrl}${getAdminProductsUrl}`, {
+      const res = await axios.get(`${baseUrl}${getAdminPageProductsUrl}?page=${page}`, {
         headers: { Authorization: cookie },
       });
       const products = res.data.products;
@@ -144,6 +148,9 @@ function App() {
         return { ...products[key] };
       });
       setGetProducts(turnArray);
+      
+      setpageinfo(res.data.pagination);
+      
     } catch (error) {
       console.log(error);
     }
@@ -394,6 +401,7 @@ function App() {
                   ))}
                 </tbody>
               </table>
+
             </div>
             <div className={!loginStatus ? "col-5" : "d-none"}>
               <h2>單一產品細節</h2>
@@ -436,6 +444,7 @@ function App() {
           </div>
         </div>
 
+        <Pagunation pageinfo={pageinfo} getAdminProductsHandler={getAdminProductsHandler}/>
         <div
           className="modal fade"
           ref={modalRef}
