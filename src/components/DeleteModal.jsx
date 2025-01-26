@@ -1,4 +1,4 @@
-function DeleteModal({ deleteProductId, deleteProductHandler }) {
+function DeleteModal({ deleteProduct, deleteProductHandler }) {
   return (
     <div
       className="modal fade"
@@ -20,7 +20,9 @@ function DeleteModal({ deleteProductId, deleteProductHandler }) {
               aria-label="Close"
             ></button>
           </div>
-          <div className="modal-body">確定要刪除{deleteProductId}嗎？</div>
+          <div className="modal-body">
+            確定要刪除 <b>{deleteProduct.title}</b> 嗎？
+          </div>
           <div className="modal-footer">
             <button
               type="button"
@@ -33,7 +35,7 @@ function DeleteModal({ deleteProductId, deleteProductHandler }) {
               type="button"
               className="btn btn-primary"
               data-bs-dismiss="modal"
-              onClick={() => deleteProductHandler(deleteProductId)}
+              onClick={() => deleteProductHandler(deleteProduct)}
             >
               確定
             </button>

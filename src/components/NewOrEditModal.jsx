@@ -57,6 +57,7 @@ function NewOrEditModal({
                   </label>
                   <input
                     type="number"
+                    min="0"
                     className="form-control"
                     id="origin_price"
                     name="origin_price"
@@ -70,6 +71,7 @@ function NewOrEditModal({
                   </label>
                   <input
                     type="number"
+                    min="0"
                     className="form-control"
                     id="price"
                     name="price"

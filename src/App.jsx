@@ -8,22 +8,20 @@ import DeleteModal from "./components/DeleteModal";
 import IsSignin from "./components/IsSignin";
 import "./assets/scss/all.scss";
 
-function App() {
-  const env = import.meta.env;
-  const baseUrl = env.VITE_API_URL;
-  const signInUrl = env.VITE_SIGNIN_URL;
-  const putProductsUrl = env.VITE_PUT_PRODUCT;
-  const loginCheckUrl = env.VITE_LOGIN_CHECK;
-  const getProductsUrl = env.VITE_GET_PRODUCTS;
-  const getPageProductsUrl = env.VITE_GET_PAGEPRODUCTS;
-  const postAdminProductsUrl = env.VITE_ADMIN_POST_PRODUCT;
-  const getAdminProductsUrl = env.VITE_ADMIN_GET_PRODUCT;
-  const getAdminPageProductsUrl = env.VITE_ADMIN_GET_PAGEPRODUCT;
+const env = import.meta.env;
+const baseUrl = env.VITE_API_URL;
+const signInUrl = env.VITE_SIGNIN_URL;
+const putProductsUrl = env.VITE_PUT_PRODUCT;
+const loginCheckUrl = env.VITE_LOGIN_CHECK;
+const getPageProductsUrl = env.VITE_GET_PAGEPRODUCTS;
+const postAdminProductsUrl = env.VITE_ADMIN_POST_PRODUCT;
+const getAdminPageProductsUrl = env.VITE_ADMIN_GET_PAGEPRODUCT;
 
+function App() {
   const [getProducts, setGetProducts] = useState([]); //管理員or使用者 產品列表
   const [loginMessage, setLoginMessage] = useState(""); //登入訊息
   const [tempProduct, setTempProduct] = useState(null); //暫存產品
-  const [deleteProductId, setDeleteProductId] = useState(""); //刪除產品id
+  const [deleteProduct, setDeleteProduct] = useState({}); //刪除產品id
   const [loginStatus, setLoginStatus] = useState(false); //登入狀態
   const [whichButton, setWhichButton] = useState(false); //登入or登出
   const [newOrEditButton, setNewOrEditButton] = useState(false); //新增or編輯
@@ -252,7 +250,7 @@ function App() {
       }
       modalRefMethod.current.hide();
     } catch (error) {
-      console.log(error);
+      alert(error.response.data.message.join(","));
     }
   }
 
@@ -281,61 +279,67 @@ function App() {
   return (
     <div className="p-5">
       <div className="container">
-        <div className="mb-3 row">
-          <label htmlFor="staticEmail" className="col-sm-2 col-htmlForm-label">
-            username
-          </label>
-          <div className="col-sm-10">
-            <input
-              name="username"
-              type="text"
-              className="htmlForm-control-plaintext"
-              id="staticEmail"
-              onChange={inputHandler}
-              disabled={loginStatus}
-            />
+        <form action="">
+          <div className="mb-3 row">
+            <label
+              htmlFor="staticEmail"
+              className="col-sm-2 col-htmlForm-label"
+            >
+              username
+            </label>
+            <div className="col-sm-10">
+              <input
+                name="username"
+                type="email"
+                className="htmlForm-control-plaintext"
+                id="staticEmail"
+                onChange={inputHandler}
+                disabled={loginStatus}
+              />
+            </div>
           </div>
-        </div>
-        <div className="mb-3 row">
-          <label
-            htmlFor="inputPassword"
-            className="col-sm-2 col-htmlForm-label"
+          <div className="mb-3 row">
+            <label
+              htmlFor="inputPassword"
+              className="col-sm-2 col-htmlForm-label"
+            >
+              Password
+            </label>
+            <div className="col-sm-10">
+              <input
+                name="password"
+                type="password"
+                className="htmlForm-control"
+                id="inputPassword"
+                onChange={inputHandler}
+                disabled={loginStatus}
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-primary me-2"
+            data-bs-toggle="modal"
+            data-bs-target="#exampleModal"
+            onClick={loginStatus ? signOutHandler : loginHandler}
           >
-            Password
-          </label>
-          <div className="col-sm-10">
-            <input
-              name="password"
-              type="password"
-              className="htmlForm-control"
-              id="inputPassword"
-              onChange={inputHandler}
-              disabled={loginStatus}
-            />
-          </div>
-        </div>
-        <button
-          type="button"
-          className="btn btn-primary me-2"
-          data-bs-toggle="modal"
-          data-bs-target="#exampleModal"
-          onClick={loginStatus ? signOutHandler : loginHandler}
-        >
-          {loginStatus ? "登出" : "登入"}
-        </button>
-        <button
-          type="button"
-          className="btn btn-danger"
-          data-bs-toggle="modal"
-          data-bs-target="#exampleModal"
-          onClick={loginCheck}
-        >
-          檢查是否登入
-        </button>
+            {loginStatus ? "登出" : "登入"}
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger"
+            data-bs-toggle="modal"
+            data-bs-target="#exampleModal"
+            onClick={loginCheck}
+          >
+            檢查是否登入
+          </button>
+        </form>
 
+        {/* 產品列表 */}
         <div>
           <div className="row mt-5">
-            <div className={loginStatus ? " col-12" : "col-7"}>
+            <div className={loginStatus ? " col-12" : "col-8"}>
               <div className="d-flex">
                 <h2 className="me-3 mb-0">產品列表</h2>
                 {loginStatus && (
@@ -397,7 +401,12 @@ function App() {
                             }
                             data-bs-toggle="modal"
                             data-bs-target="#exampleModal2"
-                            onClick={() => setDeleteProductId(item.id)}
+                            onClick={() =>
+                              setDeleteProduct({
+                                id: item.id,
+                                title: item.title,
+                              })
+                            }
                           >
                             刪除
                           </button>
@@ -410,7 +419,7 @@ function App() {
                 </tbody>
               </table>
             </div>
-            <div className={!loginStatus ? "col-5" : "d-none"}>
+            <div className={!loginStatus ? "col-4" : "d-none"}>
               <h2>單一產品細節</h2>
               {tempProduct ? ( //判斷是否有選擇商品
                 // 有就顯示選擇的商品
@@ -466,307 +475,13 @@ function App() {
           savePutProductHandler={savePutProductHandler}
           setTempProduct={setTempProduct}
         />
-        {/* <div
-          className="modal fade"
-          ref={modalRef}
-          tabIndex="-1"
-          aria-hidden="true"
-        >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {newOrEditButton ? "新增產品" : "編輯產品"}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div className="modal-body">
-                {tempProduct ? (
-                  <form>
-                    <div className="mb-3">
-                      <label htmlFor="title" className="form-label">
-                        產品名稱
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="title"
-                        name="title"
-                        value={tempProduct.title}
-                        onChange={productInputHandler}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label htmlFor="category" className="form-label">
-                        分類
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="category"
-                        name="category"
-                        value={tempProduct.category}
-                        onChange={productInputHandler}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label htmlFor="origin_price" className="form-label">
-                        原價
-                      </label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        id="origin_price"
-                        name="origin_price"
-                        value={tempProduct.origin_price}
-                        onChange={productInputHandler}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label htmlFor="price" className="form-label">
-                        售價
-                      </label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        id="price"
-                        name="price"
-                        value={tempProduct.price}
-                        onChange={productInputHandler}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label htmlFor="unit" className="form-label">
-                        單位
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="unit"
-                        name="unit"
-                        value={tempProduct.unit}
-                        onChange={productInputHandler}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label htmlFor="description" className="form-label">
-                        描述
-                      </label>
-                      <textarea
-                        className="form-control"
-                        id="description"
-                        name="description"
-                        value={tempProduct.description}
-                        onChange={productInputHandler}
-                      ></textarea>
-                    </div>
-                    <div className="mb-3">
-                      <label htmlFor="content" className="form-label">
-                        內容
-                      </label>
-                      <textarea
-                        className="form-control"
-                        id="content"
-                        name="content"
-                        value={tempProduct.content}
-                        onChange={productInputHandler}
-                      ></textarea>
-                    </div>
-                    <div className="mb-3">
-                      <label htmlFor="is_enabled" className="form-label">
-                        是否啟用
-                      </label>
-                      <select
-                        className="form-select"
-                        id="is_enabled"
-                        name="is_enabled"
-                        value={tempProduct.is_enabled}
-                        onChange={productInputHandler}
-                      >
-                        <option value="1">啟用</option>
-                        <option value="0">未啟用</option>
-                      </select>
-                    </div>
-                    <div className="mb-3">
-                      <label htmlFor="imageUrl" className="form-label">
-                        主圖網址
-                      </label>
-                      {tempProduct.imageUrl && (
-                        <img
-                          src={tempProduct.imageUrl}
-                          className="w-100 mb-3"
-                          alt="主圖"
-                        />
-                      )}
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="imageUrl"
-                        name="imageUrl"
-                        value={tempProduct.imageUrl}
-                        onChange={productInputHandler}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label htmlFor="imagesUrl" className="form-label d-block">
-                        圖片網址
-                      </label>
-                      {tempProduct.imagesUrl.length === 0 ? (
-                        <>
-                          {tempProduct.imagesUrl || (
-                            <img
-                              className="w-50 mb-3"
-                              src={tempProduct.imagesUrl}
-                              alt="附圖"
-                            />
-                          )}
-                          <input
-                            type="text"
-                            className="form-control mb-2"
-                            name="imagesUrl"
-                            value=""
-                            onChange={(e) => {
-                              setTempProduct({
-                                ...tempProduct,
-                                imagesUrl: [e.target.value],
-                              });
-                            }}
-                          />
-                        </>
-                      ) : (
-                        tempProduct.imagesUrl.map((url, index) => (
-                          <div key={index}>
-                            <img className="w-50 mb-3" src={url} alt="附圖" />
-                            <input
-                              type="text"
-                              className="form-control mb-2"
-                              name="imagesUrl"
-                              value={url}
-                              onChange={(e) => {
-                                const newImagesUrl = [...tempProduct.imagesUrl];
-                                newImagesUrl[index] = e.target.value;
-                                setTempProduct({
-                                  ...tempProduct,
-                                  imagesUrl: newImagesUrl,
-                                });
-                              }}
-                            />
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </form>
-                ) : (
-                  <p className="text-secondary">請選擇一個商品查看</p>
-                )}
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  data-bs-dismiss="modal"
-                >
-                  取消
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => {
-                    newOrEditButton
-                      ? savePostProductHandler()
-                      : savePutProductHandler(tempProduct);
-                  }}
-                >
-                  {newOrEditButton ? "確定新增" : "確定修改"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div> */}
+
         <IsSignin whichButton={whichButton} loginMessage={loginMessage} />
-        {/* <div
-          className="modal fade"
-          id="exampleModal"
-          tabIndex="-1"
-          aria-labelledby="exampleModalLabel"
-          aria-hidden="true"
-        >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title" id="exampleModalLabel">
-                  {whichButton ? "是否有登入" : "當前登入狀態"}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div className="modal-body">{loginMessage}</div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  data-bs-dismiss="modal"
-                >
-                  關閉
-                </button>
-              </div>
-            </div>
-          </div>
-        </div> */}
+
         <DeleteModal
-          deleteProductId={deleteProductId}
+          deleteProduct={deleteProduct}
           deleteProductHandler={deleteProductHandler}
         />
-        {/* <div
-          className="modal fade"
-          id="exampleModal2"
-          tabIndex="-1"
-          aria-labelledby="exampleModalLabel2"
-          aria-hidden="true"
-        >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h1 className="modal-title fs-5" id="exampleModalLabel2">
-                  警告
-                </h1>
-                <button
-                  type="button"
-                  className="btn-close"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div className="modal-body">確定要刪除{deleteProductId}嗎？</div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  data-bs-dismiss="modal"
-                >
-                  取消
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  data-bs-dismiss="modal"
-                  onClick={() => deleteProductHandler(deleteProductId)}
-                >
-                  確定
-                </button>
-              </div>
-            </div>
-          </div>
-        </div> */}
       </div>
     </div>
   );

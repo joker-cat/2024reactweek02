@@ -8,7 +8,15 @@ function Pagunation({
     <nav aria-label="Page navigation example">
       <ul className="pagination justify-content-center">
         <li className={`page-item ${!pageinfo.has_pre && "disabled"}`}>
-          <a className="page-link" href="#">
+          <a
+            className="page-link"
+            href="#"
+            onClick={() =>
+              loginStatus
+                ? getAdminProductsHandler(pageinfo.current_page - 1)
+                : getProductsHandler(pageinfo.current_page - 1)
+            }
+          >
             上一頁
           </a>
         </li>
@@ -33,7 +41,15 @@ function Pagunation({
         })}
 
         <li className={`page-item ${!pageinfo.has_next && "disabled"}`}>
-          <a className="page-link" href="#">
+          <a
+            className="page-link"
+            href="#"
+            onClick={() =>
+              loginStatus
+                ? getAdminProductsHandler(pageinfo.current_page + 1)
+                : getProductsHandler(pageinfo.current_page + 1)
+            }
+          >
             下一頁
           </a>
         </li>
