@@ -5,7 +5,7 @@ import { Modal } from "bootstrap";
 import Pagunation from "./components/Pagunation";
 import NewOrEditModal from "./components/NewOrEditModal";
 import DeleteModal from "./components/DeleteModal";
-import IsSignin from "./components/IsSignin";
+import IsSigninModal from "./components/IsSigninModal";
 import "./assets/scss/all.scss";
 
 const env = import.meta.env;
@@ -184,23 +184,6 @@ function App() {
       setLoginMessage(error.response.data.message);
     }
 
-    // https://ec-course-api.hexschool.io/v2/api/user/check
-
-    // if (!myCookie) {
-    //
-    //   return;
-    // }
-    // console.log(myCookie);
-    // setToken(myCookie);
-    // console.log(token);
-
-    // try {
-    // setLoginMessage("已登入");
-    // setLoginStatus(true);
-    // } catch (error) {
-    // setLoginMessage(error.response.data.message);
-    // setLoginStatus(false);
-    // }
   }
 
   //刪除
@@ -272,7 +255,7 @@ function App() {
       }
       modalRefMethod.current.hide();
     } catch (error) {
-      console.log(error);
+      alert(error.response.data.message.join(","));
     }
   }
 
@@ -476,7 +459,7 @@ function App() {
           setTempProduct={setTempProduct}
         />
 
-        <IsSignin whichButton={whichButton} loginMessage={loginMessage} />
+        <IsSigninModal whichButton={whichButton} loginMessage={loginMessage} />
 
         <DeleteModal
           deleteProduct={deleteProduct}

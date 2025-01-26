@@ -1,4 +1,4 @@
-function IsSignin({ whichButton, loginMessage }) {
+function IsSigninModal({ whichButton, loginMessage }) {
   return (
     <div
       className="modal fade"
@@ -36,4 +36,4 @@ function IsSignin({ whichButton, loginMessage }) {
   );
 }
 
-export default IsSignin;
+export default IsSigninModal;

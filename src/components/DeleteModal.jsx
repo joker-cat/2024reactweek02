@@ -35,7 +35,7 @@ function DeleteModal({ deleteProduct, deleteProductHandler }) {
               type="button"
               className="btn btn-primary"
               data-bs-dismiss="modal"
-              onClick={() => deleteProductHandler(deleteProduct)}
+              onClick={() => deleteProductHandler(deleteProduct.id)}
             >
               確定
             </button>
