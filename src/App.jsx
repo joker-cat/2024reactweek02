@@ -6,6 +6,7 @@ import Pagunation from "./components/Pagunation";
 import NewOrEditModal from "./components/NewOrEditModal";
 import DeleteModal from "./components/DeleteModal";
 import IsSigninModal from "./components/IsSigninModal";
+import ShoppingCart from "./components/ShoppingCart";
 import "./assets/scss/all.scss";
 
 const env = import.meta.env;
@@ -16,6 +17,8 @@ const loginCheckUrl = env.VITE_LOGIN_CHECK;
 const getPageProductsUrl = env.VITE_GET_PAGEPRODUCTS;
 const postAdminProductsUrl = env.VITE_ADMIN_POST_PRODUCT;
 const getAdminPageProductsUrl = env.VITE_ADMIN_GET_PAGEPRODUCT;
+const getShoppingCartUrl = env.VITE_GET_SHOPPINGCART;
+const postShoppingCartUrl = env.VITE_GET_SHOPPINGCART;
 
 function App() {
   const [getProducts, setGetProducts] = useState([]); //管理員or使用者 產品列表
@@ -27,9 +30,10 @@ function App() {
   const [newOrEditButton, setNewOrEditButton] = useState(false); //新增or編輯
   const [token, setToken] = useState(null); //token
   const [pageinfo, setpageinfo] = useState({});
+  const [shoppingCartProducts, setShoppingCartProducts] = useState([]);
+
   const modalRef = useRef(null);
   const modalRefMethod = useRef(null);
-
   const [user, setUser] = useState({
     username: "",
     password: "",
@@ -38,6 +42,14 @@ function App() {
   useEffect(() => {
     (async () => {
       await checkCookie();
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await getShoppingCart();
+      console.log(data.data.carts);
+      setShoppingCartProducts(data.data.carts);
     })();
   }, []);
 
@@ -137,6 +149,11 @@ function App() {
     }
   }
 
+  //取得購物車
+  function getShoppingCart() {
+    return axios.get(`${baseUrl}${getShoppingCartUrl}`);
+  }
+
   //取得管理員產品列表
   async function getAdminProductsHandler(page = 1) {
     try {
@@ -183,7 +200,6 @@ function App() {
     } catch (error) {
       setLoginMessage(error.response.data.message);
     }
-
   }
 
   //刪除
@@ -258,6 +274,25 @@ function App() {
       alert(error.response.data.message.join(","));
     }
   }
+
+  //加入購物車
+  const postToCart = async (product_id, count) => {
+    const qty =
+      count === undefined
+        ? 1
+        : document.getElementById("productcount").value - 0;
+
+    await axios.post(`${baseUrl}${postShoppingCartUrl}`, {
+      data: {
+        product_id,
+        qty,
+      },
+    });
+    const { data } = await getShoppingCart();
+   
+    
+    setShoppingCartProducts(data.data.carts);
+  };
 
   return (
     <div className="p-5">
@@ -339,10 +374,10 @@ function App() {
                 <thead>
                   <tr>
                     <th style={{ width: "40%" }}>產品名稱</th>
-                    <th style={{ width: "15%" }}>原價</th>
-                    <th style={{ width: "15%" }}>售價</th>
+                    <th style={{ width: "10%" }}>原價</th>
+                    <th style={{ width: "10%" }}>售價</th>
                     <th style={{ width: "10%" }}>是否啟用</th>
-                    <th style={{ width: "20%" }}>查看細節</th>
+                    <th style={{ width: "30%" }}>查看細節</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -363,17 +398,26 @@ function App() {
                       <td>{item.price}</td>
                       <td>{Number(item.is_enabled) ? "已啟用" : "未啟用"}</td>
                       <td>
-                        <button
-                          className="btn btn-warning me-2"
-                          type="button"
-                          onClick={() =>
-                            !loginStatus
-                              ? setTempProduct(item)
-                              : putProductBtn(item)
-                          }
-                        >
-                          {!loginStatus ? "查看細節" : "編輯"}
-                        </button>
+                        <div className="d-flex">
+                          <button
+                            className="btn btn-warning me-2"
+                            type="button"
+                            onClick={() =>
+                              !loginStatus
+                                ? setTempProduct(item)
+                                : putProductBtn(item)
+                            }
+                          >
+                            {!loginStatus ? "查看細節" : "編輯"}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={() => postToCart(item.id)}
+                          >
+                            加入購物車
+                          </button>
+                        </div>
                         {loginStatus ? (
                           <button
                             type="button"
@@ -421,11 +465,31 @@ function App() {
                       商品描述：{tempProduct.description}
                     </p>
                     <p className="card-text">商品內容：{tempProduct.content}</p>
-                    <div className="d-flex">
+                    <div className="d-flex mb-3">
                       <p className="card-text text-secondary">
                         <del>{tempProduct.origin_price}</del>
                       </p>
                       元 / {tempProduct.price} 元
+                    </div>
+                    <div className="d-flex mb-3">
+                      <select
+                        className="me-2 p-2 flex-grow-1"
+                        name="productcount"
+                        id="productcount"
+                      >
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => postToCart(tempProduct.id)}
+                      >
+                        加入購物車
+                      </button>
                     </div>
                     <h5 className="mt-3">更多圖片：</h5>
                     <div className="d-flex flex-wrap">
@@ -449,6 +513,17 @@ function App() {
           getProductsHandler={getProductsHandler}
           loginStatus={loginStatus}
         />
+        <div className="border border-3 p-2">
+          {shoppingCartProducts.length > 0 ? (
+            <ShoppingCart
+              shoppingCartProducts={shoppingCartProducts}
+              getShoppingCart={getShoppingCart}
+              setShoppingCartProducts={setShoppingCartProducts}
+            />
+          ) : (
+            <p className="fs-1 text-center">購物車為空</p>
+          )}
+        </div>
         <NewOrEditModal
           modalRef={modalRef}
           newOrEditButton={newOrEditButton}
