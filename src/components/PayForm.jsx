@@ -1,7 +1,11 @@
 import axios from "axios";
 import { useForm } from "react-hook-form";
 
-function PayForm({ shoppingCartProducts, setShoppingCartProducts }) {
+function PayForm({
+  shoppingCartProducts,
+  setShoppingCartProducts,
+  setIsScreenLoading,
+}) {
   const env = import.meta.env;
   const baseUrl = env.VITE_API_URL;
   const checkoutUrl = env.VITE_POST_CHECKOUT;
@@ -10,14 +14,16 @@ function PayForm({ shoppingCartProducts, setShoppingCartProducts }) {
     register,
     handleSubmit,
     formState: { errors },
-    reset
+    reset,
   } = useForm();
 
   const checkout = async (checkdata) => {
+    setIsScreenLoading(true);
     const resCheckout = await axios.post(`${baseUrl}${checkoutUrl}`, checkdata);
     if (resCheckout.data.success) {
       setShoppingCartProducts([]);
       reset();
+      setIsScreenLoading(false);
       alert("訂單送出成功");
     }
   };

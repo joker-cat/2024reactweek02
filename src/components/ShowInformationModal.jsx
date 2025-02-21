@@ -1,3 +1,6 @@
+import { useState } from "react";
+import ReactLoading from "react-loading";
+
 function ShowInformationModal({
   loginStatus,
   tempProduct,
@@ -6,6 +9,8 @@ function ShowInformationModal({
   closeShow,
   count,
   setCount,
+  isLoading,
+  setIsLoading,
 }) {
   return (
     <>
@@ -59,10 +64,19 @@ function ShowInformationModal({
                         </select>
                         <button
                           type="button"
-                          className="btn btn-primary"
+                          className="btn btn-primary d-flex align-items-center gap-2"
                           onClick={() => postToCart(tempProduct.id, count)}
+                          disabled={isLoading}
                         >
                           加入購物車
+                          {isLoading && (
+                            <ReactLoading
+                              type={"spin"}
+                              color={"#000"}
+                              height={"1.5rem"}
+                              width={"1.5rem"}
+                            />
+                          )}
                         </button>
                       </div>
                       <h5 className="mt-3">更多圖片：</h5>
@@ -87,7 +101,6 @@ function ShowInformationModal({
               >
                 關閉
               </button>
-              {/* <button type="button" className="btn btn-primary">Save changes</button> */}
             </div>
           </div>
         </div>

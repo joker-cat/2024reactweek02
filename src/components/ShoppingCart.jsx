@@ -4,6 +4,7 @@ function ShoppingCart({
   shoppingCartProducts,
   getShoppingCart,
   setShoppingCartProducts,
+  setIsScreenLoading,
 }) {
   const env = import.meta.env;
   const baseUrl = env.VITE_API_URL;
@@ -14,20 +15,25 @@ function ShoppingCart({
 
   // 刪除購物車商品
   async function removeProduct(id) {
+    setIsScreenLoading(true);
     await axios.delete(`${baseUrl}${deleteProductUrl}/${id}`);
     const { data } = await getShoppingCart();
     setShoppingCartProducts(data.data.carts);
+    setIsScreenLoading(false);
   }
 
   // 清空購物車
   async function clearCart() {
+    setIsScreenLoading(true);
     await axios.delete(`${baseUrl}${clearCartUrl}`);
     const { data } = await getShoppingCart();
     setShoppingCartProducts(data.data.carts);
+    setIsScreenLoading(false);
   }
 
   // 修改購物車商品數量
   async function putProduct(productObj) {
+    setIsScreenLoading(true);
     await axios.put(`${baseUrl}${putProductUrl}/${productObj.id}`, {
       data: {
         product_id: productObj.id,
@@ -36,6 +42,7 @@ function ShoppingCart({
     });
     const { data } = await getShoppingCart();
     setShoppingCartProducts(data.data.carts);
+    setIsScreenLoading(false);
   }
 
   return (

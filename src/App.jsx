@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 import axios from "axios";
+import ReactLoading from "react-loading";
 import { Modal } from "bootstrap";
 import Pagunation from "./components/Pagunation";
 import NewOrEditModal from "./components/NewOrEditModal";
@@ -34,7 +35,8 @@ function App() {
   const [count, setCount] = useState(1);
   const [pageinfo, setpageinfo] = useState({});
   const [shoppingCartProducts, setShoppingCartProducts] = useState([]);
-
+  const [isScreenLoading, setIsScreenLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const modalRef = useRef(null);
   const modalRefMethod = useRef(null);
   const modalInformation = useRef(null);
@@ -144,6 +146,7 @@ function App() {
   //取得使用者產品列表
   async function getProductsHandler(page = 1) {
     try {
+      setIsScreenLoading(true);
       const res = await axios.get(
         `${baseUrl}${getPageProductsUrl}?page=${page}`
       );
@@ -152,6 +155,8 @@ function App() {
       setpageinfo(res.data.pagination);
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsScreenLoading(false);
     }
   }
 
@@ -283,14 +288,9 @@ function App() {
 
   //加入購物車
   const postToCart = async (product_id, defaultCount = 1) => {
+    setIsScreenLoading(true);
+    setIsLoading(true);
     const qty = defaultCount;
-
-    // const qty =
-    //   count === undefined
-    //     ? 1
-    //     : document.getElementById("productcount").value - 0;
-    // console.log(qty);
-
     await axios.post(`${baseUrl}${postShoppingCartUrl}`, {
       data: {
         product_id,
@@ -298,8 +298,9 @@ function App() {
       },
     });
     const { data } = await getShoppingCart();
-
     setShoppingCartProducts(data.data.carts);
+    setIsScreenLoading(false);
+    setIsLoading(false);
   };
 
   //開啟商品modal
@@ -474,6 +475,8 @@ function App() {
               closeShow={closeShow}
               count={count}
               setCount={setCount}
+              isLoading={isLoading}
+              setIsLoading={setIsLoading}
             />
           </div>
         </div>
@@ -491,6 +494,8 @@ function App() {
                 shoppingCartProducts={shoppingCartProducts}
                 getShoppingCart={getShoppingCart}
                 setShoppingCartProducts={setShoppingCartProducts}
+                setIsScreenLoading={setIsScreenLoading}
+
               />
             ) : (
               <p className="fs-1 text-center">購物車為空</p>
@@ -503,6 +508,7 @@ function App() {
           shoppingCartProducts={shoppingCartProducts}
           getShoppingCart={getShoppingCart}
           setShoppingCartProducts={setShoppingCartProducts}
+          setIsScreenLoading={setIsScreenLoading}
         />
         <NewOrEditModal
           modalRef={modalRef}
@@ -520,6 +526,25 @@ function App() {
           deleteProduct={deleteProduct}
           deleteProductHandler={deleteProductHandler}
         />
+
+        {isScreenLoading && (
+          <div
+            className="d-flex justify-content-center align-items-center"
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(255,255,255,0.3)",
+              zIndex: 999,
+            }}
+          >
+            <ReactLoading
+              type="spin"
+              color="black"
+              width="4rem"
+              height="4rem"
+            />
+          </div>
+        )}
       </div>
     </div>
   );
