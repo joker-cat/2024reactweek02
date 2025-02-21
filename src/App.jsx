@@ -7,8 +7,9 @@ import NewOrEditModal from "./components/NewOrEditModal";
 import DeleteModal from "./components/DeleteModal";
 import IsSigninModal from "./components/IsSigninModal";
 import ShoppingCart from "./components/ShoppingCart";
-import "./assets/scss/all.scss";
 import ShowInformationModal from "./components/ShowInformationModal";
+import PayForm from "./components/PayForm";
+import "./assets/scss/all.scss";
 
 const env = import.meta.env;
 const baseUrl = env.VITE_API_URL;
@@ -498,7 +499,11 @@ function App() {
         ) : (
           <></>
         )}
-
+        <PayForm
+          shoppingCartProducts={shoppingCartProducts}
+          getShoppingCart={getShoppingCart}
+          setShoppingCartProducts={setShoppingCartProducts}
+        />
         <NewOrEditModal
           modalRef={modalRef}
           newOrEditButton={newOrEditButton}
